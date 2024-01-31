@@ -73,9 +73,9 @@ func maxScoreWords(words []string, letters []byte, score []int) int {
 	sumsChan := make(chan int)
 	wordsCombinations := generateCombinations(words)
 	for _, words := range wordsCombinations {
-		go func() {
+		go func(words []string) {
 			wg.Add(1)
-			defer wg.Done()
+
 			var results []string = []string{""}
 			var f bool = true
 			var scoreSum int = 0
@@ -101,7 +101,8 @@ func maxScoreWords(words []string, letters []byte, score []int) int {
 				scoreSum += wordsScoredMap[w]
 			}
 			sumsChan <- scoreSum
-		}()
+			defer wg.Done()
+		}(words)
 	}
 
 	var scoredSums []int
@@ -126,5 +127,3 @@ func main() {
 	fmt.Println(maxScoreWords(w, l, sc))
 
 }
-
-// shit is undeterministic
