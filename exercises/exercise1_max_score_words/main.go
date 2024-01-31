@@ -104,7 +104,6 @@ func maxScoreWords(words []string, letters []byte, score []int) int {
 			defer wg.Done()
 		}(words)
 	}
-
 	var scoredSums []int
 	for i := 0; i < len(wordsCombinations); i += 1 {
 		s := <-sumsChan
@@ -112,6 +111,60 @@ func maxScoreWords(words []string, letters []byte, score []int) int {
 	}
 	wg.Wait()
 	close(sumsChan)
+	return slices.Max(scoredSums)
+}
+
+func maxScoreWords_one_thread(words []string, letters []byte, score []int) int {
+	var alphabetMap map[byte]int = make(map[byte]int)
+	var alphabet []byte = []byte("abcdefghijklmnopqrstuvwxyz")
+	var wordsScoredMap map[string]int = make(map[string]int)
+
+	for i := 0; i < len(alphabet); i += 1 {
+		alphabetMap[alphabet[i]] = score[i]
+	}
+
+	var wordsTemp = removeDuplicateStr(words)
+	for _, word := range wordsTemp {
+		for _, l := range []byte(word) {
+			if _, v := wordsScoredMap[word]; !v {
+				wordsScoredMap[word] = alphabetMap[l]
+			} else {
+				wordsScoredMap[word] += alphabetMap[l]
+			}
+		}
+
+	}
+	var scoredSums []int
+	wordsCombinations := generateCombinations(words)
+	for _, words := range wordsCombinations {
+
+		var results []string = []string{""}
+		var f bool = true
+		var scoreSum int = 0
+		var _letters []byte
+		_letters = append(_letters, letters...)
+
+		for _, word := range words {
+			for _, l := range []byte(word) {
+				if slices.Contains(_letters, l) {
+					var index = indexOf(l, _letters)
+					_letters = append(_letters[:index], _letters[index+1:]...)
+				} else {
+					f = false
+					break
+				}
+			}
+			if f {
+				results = append(results, word)
+			}
+
+		}
+		for _, w := range results {
+			scoreSum += wordsScoredMap[w]
+		}
+		scoredSums = append(scoredSums, scoreSum)
+	}
+
 	return slices.Max(scoredSums)
 }
 
@@ -131,6 +184,22 @@ func main() {
 	sc = []int{1, 8, 3, 1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	fmt.Println(maxScoreWords(w, l, sc))
 
+	w = []string{"dog", "cat", "dad", "good"}
+	l = []byte{'a', 'a', 'c', 'd', 'd', 'd', 'g', 'o', 'o'}
+	sc = []int{1, 0, 9, 5, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	fmt.Println(maxScoreWords_one_thread(w, l, sc))
+
+	w = []string{"xxxz", "ax", "bx", "cx"}
+	l = []byte{'z', 'a', 'b', 'c', 'x', 'x', 'x'}
+	sc = []int{4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 10}
+	fmt.Println(maxScoreWords_one_thread(w, l, sc))
+
+	w = []string{"ad", "dbacbbedc", "ae", "adbdacad", "dcdecacdcb", "ddbba", "dbcdbeaade", "aeccdcb", "bce"}
+	l = []byte{'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'd', 'd', 'd', 'd', 'e', 'e', 'e', 'e', 'e', 'e'}
+	sc = []int{1, 8, 3, 1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	fmt.Println(maxScoreWords_one_thread(w, l, sc))
+
 }
 
-// TODO it use to much memory
+// TODO one thread is to slow
+// TODO multi thread use to much memory
