@@ -14,11 +14,12 @@ func minPartitions(n string) int {
 		if err != nil {
 			panic(err)
 		}
+		if number == 9 {
+			return 9
+		}
 		if number > max {
 			max = number
-			if number == 9 {
-				break
-			}
+
 		}
 	}
 	return max
